@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
@@ -18,6 +19,7 @@ PlasmoidItem {
 
     readonly property int volumeStep: 2
     property int lyricsRequestToken: 0
+    readonly property string lyricsStatusText: buildLyricsStatusText()
 
 
     /* Lyrics LRC library */
@@ -75,6 +77,8 @@ PlasmoidItem {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         cursorShape: playerAdapter && playerAdapter.canRaise ? Qt.PointingHandCursor : Qt.ArrowCursor
         hoverEnabled: true
+        ToolTip.visible: containsMouse && lyricsStatusText.length > 0
+        ToolTip.text: lyricsStatusText
 
         onClicked: (mouse) => {
             switch (mouse.button) {
@@ -253,6 +257,37 @@ PlasmoidItem {
         return text && text.length > maxLen
             ? text.slice(0, maxLen - 3) + "..."
             : text;
+    }
+
+    function buildLyricsStatusText() {
+        if (!playerAdapter || !playerAdapter.ready) {
+            return "";
+        }
+
+        const details = [
+            "Player: " + (playerAdapter.identity || "Unknown"),
+            "Track: " + (playerAdapter.track || "Unknown")
+        ];
+
+        if (lyricsRenderer.lyricsPayload) {
+            details.push("Lyrics source: " + formatLyricsSource(lyricsRenderer.lyricsPayload.source));
+            details.push("Lyrics mode: " + lyricsRenderer.lyricsPayload.mode);
+        } else {
+            details.push("Lyrics source: none");
+        }
+
+        return details.join("\n");
+    }
+
+    function formatLyricsSource(source) {
+        switch (source) {
+            case "lrclib":
+                return "LRCLIB";
+            case "mpris-metadata":
+                return "MPRIS metadata";
+            default:
+                return source || "unknown";
+        }
     }
 
     /* Artwork update handler */
