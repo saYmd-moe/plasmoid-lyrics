@@ -23,7 +23,7 @@ Text {
     lineHeight: font.pixelSize + font.pixelSize * 0.2
 
     property var lyrics: null
-    property var spotify: null
+    property var playerAdapter: null
     property var transitionDuration: 1000
     property var lineCount: 0
     property var renderedLineIndex: -1
@@ -61,7 +61,7 @@ Text {
 
     Timer {
         interval: 250
-        running: spotify.ready && spotify.playing && lyrics !== null
+        running: playerAdapter.ready && playerAdapter.playing && lyrics !== null
         repeat: true
         onTriggered: {
             updateTargetPosition()
@@ -145,7 +145,7 @@ Text {
             return -1;
         }
 
-        let position = spotify.getDaemonPosition() / 1_000_000 + offset;
+        let position = playerAdapter.getDaemonPosition() / 1_000_000 + offset;
         let target = -1;
         for (let i = 0; i < lyrics.length; i++) {
             if (lyrics[i].time <= position) {

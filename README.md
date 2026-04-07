@@ -1,12 +1,13 @@
-# KDE Plasma Spotify Plasmoid
+# Plasma Lyrics
 
-A KDE Plasma widget that displays the current song playing on Spotify along with its lyrics, synchronized in real-time.<br>
-This plasmoid is designed to be lightweight and efficient without impacting system resources.
+A KDE Plasma widget that displays the current song playing from an MPRIS-compatible player together with synchronized lyrics in real time.<br>
+This plasmoid is designed to stay lightweight while fitting naturally into a Plasma panel.
 
-![Spotify Plasmoid Preview](.github/assets/preview.gif)
+![Plasma Lyrics Preview](.github/assets/preview.gif)
 
 ## Features
 
+- **Generic MPRIS Playback**: Works with the current MPRIS-compatible player instead of only Spotify.
 - **Album Artwork**: Displays album art for the currently playing track.
 - **Song Details**: Shows the song title and artist name.
 - **Song Progress Bar**: A visual indicator of the song's playback progress.
@@ -16,16 +17,13 @@ This plasmoid is designed to be lightweight and efficient without impacting syst
 - **Volume Control**: Adjust volume using the scroll wheel.
 
 ## Installation
-### KDE Store Installation
-You can easily install the Spotify plasmoid from the [KDE Store](https://store.kde.org/p/2265660)
-
 ### Manual Installation
 1. **Copy Files**
    Copy the contents of the src folder to your local plasmoid directory:
 
 ```bash
-mkdir -p ~/.local/share/plasma/plasmoids/spotify/
-cp -r src/* ~/.local/share/plasma/plasmoids/spotify/
+mkdir -p ~/.local/share/plasma/plasmoids/plasmoid-lyrics/
+cp -r src/* ~/.local/share/plasma/plasmoids/plasmoid-lyrics/
 ```
 
 2. **Restart Plasmashell**
@@ -35,7 +33,7 @@ cp -r src/* ~/.local/share/plasma/plasmoids/spotify/
 kquitapp5 plasmashell && kstart5 plasmashell
 ```
 
-Your plasmoid should now be available to add to your KDE Plasma panel or desktop.
+The widget should now be available to add to your KDE Plasma panel or desktop.
 
 ## Images
 ![No Lyrics](.github/assets/no_lyrics.png)

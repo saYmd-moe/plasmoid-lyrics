@@ -24,21 +24,21 @@ PlasmoidItem {
         id: lyricsLrcLib
     }
 
-    /* Spotify player */
-    Spotify {
-        id: spotify
+    /* Current MPRIS player */
+    PlayerAdapter {
+        id: playerAdapter
     }
 
     /* Signal handlers */
     Connections {
-        target: spotify
+        target: playerAdapter
 
         onReadyChanged: {
-            Plasmoid.status = spotify.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
+            Plasmoid.status = playerAdapter.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
         }
 
         onPositionChanged: {
-            if (spotify.ready) {
+            if (playerAdapter.ready) {
                 updateProgressIndicator()
             }
         }
@@ -53,7 +53,7 @@ PlasmoidItem {
     Timer {
         id: timer
         interval: 1000;
-        running: spotify && spotify.playing;
+        running: playerAdapter && playerAdapter.playing;
         repeat: true
         onTriggered: () => {
             updateProgressIndicator()
@@ -65,17 +65,17 @@ PlasmoidItem {
         z: 100
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        cursorShape: spotify && spotify.canRaise ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: playerAdapter && playerAdapter.canRaise ? Qt.PointingHandCursor : Qt.ArrowCursor
         hoverEnabled: true
 
         onClicked: (mouse) => {
             switch (mouse.button) {
                 case Qt.MiddleButton:
-                    spotify.togglePlayback()
+                    playerAdapter.togglePlayback()
                     break
                 case Qt.LeftButton:
-                    if (spotify.canRaise) {
-                        spotify.raise()
+                    if (playerAdapter.canRaise) {
+                        playerAdapter.raise()
                     }
                     break
             }
@@ -83,9 +83,9 @@ PlasmoidItem {
 
         onWheel: (wheel) => {
             if (wheel.angleDelta.y > 0) {
-                spotify.changeVolume(volumeStep / 100, true)
+                playerAdapter.changeVolume(volumeStep / 100, true)
             } else {
-                spotify.changeVolume(-volumeStep / 100, true)
+                playerAdapter.changeVolume(-volumeStep / 100, true)
             }
         }
     }
@@ -99,8 +99,8 @@ PlasmoidItem {
         LyricsRenderer {
             id: lyricsRenderer
             lyrics: null
-            spotify: spotify
-            visible: plasmoid.configuration.showLyrics && spotify && spotify.ready && lyrics && lyrics.length > 0
+            playerAdapter: playerAdapter
+            visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready && lyrics && lyrics.length > 0
             Layout.fillWidth: true
             centeredLyrics: !plasmoid.configuration.showAlbumCover
                 && !plasmoid.configuration.showTitle
@@ -167,7 +167,7 @@ PlasmoidItem {
             /* Progress bar */
             Rectangle {
                 id: progress
-                visible: spotify && spotify.ready
+                visible: playerAdapter && playerAdapter.ready
 
                 x: 2
                 height: 3
@@ -209,7 +209,7 @@ PlasmoidItem {
                     font.pixelSize: plasmoid.configuration.titleFontSize
                     font.family: plasmoid.configuration.titleFontFamily
                     font.weight: Font.Bold
-                    text: spotify && spotify.ready ? truncateText(spotify.track, plasmoid.configuration.maxTitleArtistLength) : "Spotify"
+                    text: playerAdapter && playerAdapter.ready ? truncateText(playerAdapter.track, plasmoid.configuration.maxTitleArtistLength) : "Lyrics"
 
                     Layout.preferredHeight: title.font.pixelSize + 4
                     visible: plasmoid.configuration.showTitle
@@ -226,7 +226,7 @@ PlasmoidItem {
                     color: plasmoid.configuration.useCustomArtistColor ? plasmoid.configuration.artistTextColor : Kirigami.Theme.textColor
                     font.pixelSize: plasmoid.configuration.artistFontSize
                     font.family: plasmoid.configuration.artistFontFamily
-                    text: spotify && spotify.ready ? truncateText(spotify.artist, plasmoid.configuration.maxTitleArtistLength) : "No song playing"
+                    text: playerAdapter && playerAdapter.ready ? truncateText(playerAdapter.artist, plasmoid.configuration.maxTitleArtistLength) : "No song playing"
 
                     Layout.preferredHeight: artist.font.pixelSize + 4
                     visible: plasmoid.configuration.showArtist
@@ -236,8 +236,8 @@ PlasmoidItem {
     }
 
     function updateProgressIndicator() {
-        if (spotify.ready) {
-            progressIndicator.width = Math.min(1, (spotify.getDaemonPosition() / spotify.length)) * progress.width
+        if (playerAdapter.ready) {
+            progressIndicator.width = Math.min(1, (playerAdapter.getDaemonPosition() / playerAdapter.length)) * progress.width
         }
     }
 
@@ -249,8 +249,8 @@ PlasmoidItem {
 
     /* Artwork update handler */
     function updateArtwork() {
-        if (spotify.ready) {
-            let url = spotify.artworkUrl;
+        if (playerAdapter.ready) {
+            let url = playerAdapter.artworkUrl;
             if (url && url.startsWith("https://") && !plasmoid.configuration.fetchAlbumCoverHttps) {
                 url = url.replace("https://", "http://");
             }
@@ -260,15 +260,15 @@ PlasmoidItem {
 
     /* Lyrics update handler */
     function updateLyrics() {
-        if (spotify && spotify.ready) {
-            let requestedTrack = spotify.track;
-            let requestedArtist = spotify.artist;
+        if (playerAdapter && playerAdapter.ready) {
+            let requestedTrack = playerAdapter.track;
+            let requestedArtist = playerAdapter.artist;
 
             lyricsRenderer.lyrics = null;
 
-            lyricsLrcLib.fetchLyrics(spotify.track, spotify.artist, spotify.album)
+            lyricsLrcLib.fetchLyrics(playerAdapter.track, playerAdapter.artist, playerAdapter.album)
                 .then(lyrics => {
-                if (widget && requestedTrack === spotify.track && requestedArtist === spotify.artist) {
+                if (widget && requestedTrack === playerAdapter.track && requestedArtist === playerAdapter.artist) {
                     lyricsRenderer.lyrics = lyrics;
                 }
             })

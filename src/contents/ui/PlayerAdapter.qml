@@ -8,22 +8,20 @@ QtObject {
     {
         readonly property int containerRole: Qt.UserRole + 1
 
-        function isSpotifyPlayer(rowIndex) {
+        function hasPlayer(rowIndex) {
             const player = this.data(this.index(rowIndex, 0), containerRole)
-            return !!(player && player.identity === "Spotify");
+            return !!player;
         }
 
         onRowsInserted: (_, rowIndex) => {
-            // Check if the inserted row is a Spotify player
-            if (isSpotifyPlayer(rowIndex)) {
+            if (this.currentIndex < 0 && hasPlayer(rowIndex)) {
                 this.currentIndex = rowIndex;
             }
         }
 
         Component.onCompleted: {
-            // Check for existing Spotify player on initialization
             for (let i = 0; i < this.rowCount(); i++) {
-                if (isSpotifyPlayer(i)) {
+                if (hasPlayer(i)) {
                     this.currentIndex = i;
                     break;
                 }
@@ -36,7 +34,7 @@ QtObject {
     }
 
     readonly property bool ready: {
-        return player && player.identity === "Spotify"
+        return !!player
     }
 
     readonly property string track: ready ? player.track : null

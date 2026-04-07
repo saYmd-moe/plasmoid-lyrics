@@ -5,13 +5,16 @@
   "X-Plasma-MainScript": "ui/main.qml",
   "KPlugin": {
     "Icon": "view-media-track",
-    "Id": "spotify",
-    "Name": "Spotify",
-    "Version": "1.1.11",
+    "Id": "plasmoid-lyrics",
+    "Name": "Plasma Lyrics",
+    "Version": "1.2.0",
     "Category": "Multimedia",
     "Authors": [
       {
         "Name": "LabyStudio"
+      },
+      {
+        "Name": "saYmd-moe"
       }
     ]
   },
@@ -19,4 +22,3 @@
     "org.kde.plasma.multimediacontrols"
   ]
 }
-
