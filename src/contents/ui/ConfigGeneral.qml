@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
+import org.kde.plasma.private.mpris as Mpris
 
 KCM.SimpleKCM {
     property bool cfg_showLyricsDefault
@@ -52,6 +53,25 @@ KCM.SimpleKCM {
     property alias cfg_useCustomArtistColor: useCustomArtistColor.checked
     property string cfg_artistTextColor: plasmoid.configuration.artistTextColor
     property alias cfg_preferredPlayerIdentity: preferredPlayerIdentity.text
+    readonly property var detectedPlayers: availablePlayers()
+
+    property var mpris2Model: Mpris.Mpris2Model {
+        readonly property int containerRole: Qt.UserRole + 1
+    }
+
+    function availablePlayers() {
+        let identities = [];
+
+        for (let i = 0; i < mpris2Model.rowCount(); i++) {
+            const player = mpris2Model.data(mpris2Model.index(i, 0), mpris2Model.containerRole);
+            const identity = player && player.identity ? player.identity.toString().trim() : "";
+            if (identity.length > 0 && identities.indexOf(identity) < 0) {
+                identities.push(identity);
+            }
+        }
+
+        return identities.sort();
+    }
 
     ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
@@ -89,6 +109,15 @@ KCM.SimpleKCM {
             text: "Show lyrics"
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: 20
+            Layout.maximumWidth: 520
+            wrapMode: Text.WordWrap
+            text: "Synced lyrics are preferred from LRCLIB. If that fails, the plasmoid can fall back to plain lyrics exposed by the active MPRIS player."
+            opacity: 0.75
         }
 
         CheckBox {
@@ -154,6 +183,16 @@ KCM.SimpleKCM {
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showLyrics.checked
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: 40
+            Layout.maximumWidth: 520
+            wrapMode: Text.WordWrap
+            text: "Keep both providers enabled for the most robust experience. LRCLIB gives synced lines when available, while MPRIS metadata can still show plain text lyrics."
+            opacity: 0.7
+            visible: showLyrics.checked
         }
 
         CheckBox {
@@ -238,6 +277,49 @@ KCM.SimpleKCM {
                     text = plasmoid.configuration.preferredPlayerIdentity || ""
                 }
             }
+
+            Button {
+                text: "Clear"
+                enabled: preferredPlayerIdentity.text.length > 0
+                onClicked: preferredPlayerIdentity.text = ""
+            }
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.maximumWidth: 520
+            wrapMode: Text.WordWrap
+            text: "Leave this empty to use the first available player. If more than one player is running, pick one of the detected identities below."
+            opacity: 0.75
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            spacing: Kirigami.Units.smallSpacing
+            visible: detectedPlayers.length > 0
+
+            Repeater {
+                model: detectedPlayers
+
+                Button {
+                    required property string modelData
+                    text: modelData
+                    flat: preferredPlayerIdentity.text !== modelData
+                    highlighted: preferredPlayerIdentity.text === modelData
+                    onClicked: preferredPlayerIdentity.text = modelData
+                }
+            }
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            text: "No running MPRIS players detected right now."
+            opacity: 0.65
+            visible: detectedPlayers.length === 0
         }
 
         Kirigami.Heading {
