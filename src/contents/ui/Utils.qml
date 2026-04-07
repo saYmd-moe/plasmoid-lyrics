@@ -31,7 +31,35 @@ Item {
         });
     }
 
-    function parseLyrics(text) {
+    function buildLyricsCacheKey(trackName, artistName, albumName) {
+        return [trackName, artistName, albumName]
+            .map(part => (part || "").toString().trim().toLowerCase())
+            .join("::");
+    }
+
+    function createLyricsPayload(lines, source, cacheKey, mode) {
+        return {
+            mode: mode || "synced",
+            source: source || "",
+            cacheKey: cacheKey || "",
+            lines: lines || []
+        };
+    }
+
+    function createPlainLyricsPayload(text, source, cacheKey) {
+        let lines = (text || "")
+            .split("\n")
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .map(line => ({
+                time: 0,
+                text: line
+            }));
+
+        return createLyricsPayload(lines, source, cacheKey, "plain");
+    }
+
+    function parseSyncedLyrics(text) {
         let lines = text.split("\n");
         let lyrics = [];
 
@@ -54,5 +82,9 @@ Item {
         console.log("Parsed " + lyrics.length + " lines of lyrics");
 
         return lyrics;
+    }
+
+    function parseLyrics(text) {
+        return parseSyncedLyrics(text);
     }
 }

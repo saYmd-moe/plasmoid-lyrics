@@ -22,13 +22,16 @@ Text {
     lineHeightMode: Text.FixedHeight
     lineHeight: font.pixelSize + font.pixelSize * 0.2
 
-    property var lyrics: null
+    property var lyricsPayload: null
     property var playerAdapter: null
     property var transitionDuration: 1000
     property var lineCount: 0
     property var renderedLineIndex: -1
     property var renderedHighlighted: false
     property bool centeredLyrics: false
+    readonly property bool hasLyrics: currentLyrics.length > 0
+    readonly property var currentLyrics: lyricsPayload && lyricsPayload.lines ? lyricsPayload.lines : []
+    readonly property string lyricsMode: lyricsPayload && lyricsPayload.mode ? lyricsPayload.mode : "synced"
 
     function darkenColor(hexColor, factor) {
         // factor 0.0 = black, 1.0 = original color
@@ -52,7 +55,7 @@ Text {
         function onHighlightCurrentLineChanged() { updateText() }
     }
 
-    onLyricsChanged: {
+    onLyricsPayloadChanged: {
         if (!plasmoid.configuration.highlightCurrentLine) {
             updateText();
         }
@@ -61,7 +64,7 @@ Text {
 
     Timer {
         interval: 250
-        running: playerAdapter.ready && playerAdapter.playing && lyrics !== null
+        running: playerAdapter && playerAdapter.ready && playerAdapter.playing && lyricsMode === "synced" && hasLyrics
         repeat: true
         onTriggered: {
             updateTargetPosition()
@@ -80,19 +83,20 @@ Text {
         let currentLineIndex = getCurrentLineIndex();
         let highlight = plasmoid.configuration.highlightCurrentLine;
         let useCustomColor = plasmoid.configuration.useCustomLyricsColor;
+        let canHighlight = highlight && lyricsMode === "synced";
         let unhighlightedColor = useCustomColor
             ? darkenColor(plasmoid.configuration.lyricsTextColor, 0.45)
             : "gray";
 
-        if (lyrics !== null && lyrics) {
-            lyrics.forEach((line, i) => {
-                if (i === currentLineIndex || !highlight) {
+        if (hasLyrics) {
+            currentLyrics.forEach((line, i) => {
+                if (i === currentLineIndex || !canHighlight) {
                     builder += line.text;
                 } else {
                     builder += `<span style="color:${unhighlightedColor}">${line.text}</span>`;
                 }
 
-                if (i < lyrics.length - 1) {
+                if (i < currentLyrics.length - 1) {
                     builder += "<br/>";
                 }
                 lines++;
@@ -102,7 +106,7 @@ Text {
         lineCount = lines;
         textElement.text = builder;
         renderedLineIndex = currentLineIndex;
-        renderedHighlighted = highlight;
+        renderedHighlighted = canHighlight;
     }
 
     function updateTargetPosition(animated = true) {
@@ -128,6 +132,9 @@ Text {
 
     function canUpdateText() {
         let highlight = plasmoid.configuration.highlightCurrentLine;
+        if (lyricsMode !== "synced") {
+            return renderedHighlighted !== false;
+        }
         if (renderedHighlighted !== highlight) {
             return true;
         }
@@ -141,14 +148,14 @@ Text {
     }
 
     function getCurrentLineIndex(offset = 0) {
-        if (lyrics === null || lyrics.length === 0) {
+        if (lyricsMode !== "synced" || !hasLyrics || !playerAdapter) {
             return -1;
         }
 
         let position = playerAdapter.getDaemonPosition() / 1_000_000 + offset;
         let target = -1;
-        for (let i = 0; i < lyrics.length; i++) {
-            if (lyrics[i].time <= position) {
+        for (let i = 0; i < currentLyrics.length; i++) {
+            if (currentLyrics[i].time <= position) {
                 target = i;
             } else {
                 break;
@@ -158,6 +165,10 @@ Text {
     }
 
     function calculateTargetY() {
+        if (lyricsMode !== "synced") {
+            return textElement.parent.height / 2 - textElement.lineHeight / 2;
+        }
+
         let currentLineIndex = getCurrentLineIndex(transitionDuration / 1000 / 2);
         if (!(currentLineIndex >= 0 && lineCount > 0)) {
             return textElement.parent.height / 2 - textElement.lineHeight / 2;
@@ -167,7 +178,7 @@ Text {
         if (plasmoid.configuration.alternativeLineHeightCalculation) {
             let offsetY = 0;
             let lineHeight = (textElement.contentHeight - 3) / textElement.lineCount;
-            if (lyrics !== null && currentLineIndex >= 0) {
+            if (hasLyrics && currentLineIndex >= 0) {
                 offsetY = lineHeight * (currentLineIndex + 1);
             }
             return textElement.parent.height / 2 - offsetY + lineHeight / 2 - 3;

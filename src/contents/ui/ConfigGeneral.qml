@@ -29,6 +29,8 @@ KCM.SimpleKCM {
     property alias cfg_lyricsFontSize: lyricsFontSize.value
     property alias cfg_alternativeLineHeightCalculation: alternativeLineHeightCalculation.checked
     property alias cfg_lyricsFontFamily: lyricsFontFamily.currentText
+    property alias cfg_enableLrclibProvider: enableLrclibProvider.checked
+    property alias cfg_enableMprisMetadataProvider: enableMprisMetadataProvider.checked
 
     property bool cfg_useCustomLyricsColorDefault
     property alias cfg_useCustomLyricsColor: useCustomLyricsColor.checked
@@ -49,6 +51,7 @@ KCM.SimpleKCM {
     property bool cfg_useCustomArtistColorDefault
     property alias cfg_useCustomArtistColor: useCustomArtistColor.checked
     property string cfg_artistTextColor: plasmoid.configuration.artistTextColor
+    property alias cfg_preferredPlayerIdentity: preferredPlayerIdentity.text
 
     ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
@@ -138,6 +141,22 @@ KCM.SimpleKCM {
         }
 
         CheckBox {
+            id: enableLrclibProvider
+            text: "Enable LRCLIB provider"
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: 20
+            enabled: showLyrics.checked
+        }
+
+        CheckBox {
+            id: enableMprisMetadataProvider
+            text: "Enable MPRIS metadata lyrics fallback"
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: 20
+            enabled: showLyrics.checked
+        }
+
+        CheckBox {
             id: useCustomLyricsColor
             text: "Use custom lyrics text color"
             Layout.alignment: Qt.AlignLeft
@@ -192,6 +211,33 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             height: 20
             color: "transparent"
+        }
+
+        Kirigami.Heading {
+            text: "Player"
+            level: 3
+            Layout.alignment: Qt.AlignLeft
+        }
+
+        RowLayout {
+            Layout.alignment: Qt.AlignLeft
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            spacing: Kirigami.Units.smallSpacing
+
+            Label {
+                text: "Preferred player identity:"
+                Layout.alignment: Qt.AlignLeft
+            }
+
+            TextField {
+                id: preferredPlayerIdentity
+                Layout.fillWidth: true
+                placeholderText: "Spotify"
+
+                Component.onCompleted: {
+                    text = plasmoid.configuration.preferredPlayerIdentity || ""
+                }
+            }
         }
 
         Kirigami.Heading {

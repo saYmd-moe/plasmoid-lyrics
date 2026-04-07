@@ -17,6 +17,7 @@ PlasmoidItem {
     Layout.preferredHeight: row.implicitHeight
 
     readonly property int volumeStep: 2
+    property int lyricsRequestToken: 0
 
 
     /* Lyrics LRC library */
@@ -35,6 +36,12 @@ PlasmoidItem {
 
         onReadyChanged: {
             Plasmoid.status = playerAdapter.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
+            if (!playerAdapter.ready) {
+                lyricsRenderer.lyricsPayload = null
+            } else {
+                updateArtwork()
+                Qt.callLater(updateLyrics)
+            }
         }
 
         onPositionChanged: {
@@ -44,6 +51,7 @@ PlasmoidItem {
         }
 
         onArtworkUrlChanged: updateArtwork()
+        onIdentityChanged: Qt.callLater(updateLyrics)
         onTrackChanged: Qt.callLater(updateLyrics)
         onArtistChanged: Qt.callLater(updateLyrics)
         onAlbumChanged: Qt.callLater(updateLyrics)
@@ -98,9 +106,9 @@ PlasmoidItem {
 
         LyricsRenderer {
             id: lyricsRenderer
-            lyrics: null
+            lyricsPayload: null
             playerAdapter: playerAdapter
-            visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready && lyrics && lyrics.length > 0
+            visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready && hasLyrics
             Layout.fillWidth: true
             centeredLyrics: !plasmoid.configuration.showAlbumCover
                 && !plasmoid.configuration.showTitle
@@ -261,17 +269,27 @@ PlasmoidItem {
     /* Lyrics update handler */
     function updateLyrics() {
         if (playerAdapter && playerAdapter.ready) {
-            let requestedTrack = playerAdapter.track;
-            let requestedArtist = playerAdapter.artist;
+            const requestToken = ++lyricsRequestToken;
+            const requestedIdentity = playerAdapter.identity;
+            const requestedTrack = playerAdapter.track;
+            const requestedArtist = playerAdapter.artist;
+            const requestedAlbum = playerAdapter.album;
 
-            lyricsRenderer.lyrics = null;
+            lyricsRenderer.lyricsPayload = null;
 
-            lyricsLrcLib.fetchLyrics(playerAdapter.track, playerAdapter.artist, playerAdapter.album)
-                .then(lyrics => {
-                if (widget && requestedTrack === playerAdapter.track && requestedArtist === playerAdapter.artist) {
-                    lyricsRenderer.lyrics = lyrics;
+            lyricsLrcLib.fetchLyricsPayload(requestedTrack, requestedArtist, requestedAlbum, playerAdapter.metadata)
+                .then(payload => {
+                if (widget
+                    && requestToken === lyricsRequestToken
+                    && requestedIdentity === playerAdapter.identity
+                    && requestedTrack === playerAdapter.track
+                    && requestedArtist === playerAdapter.artist
+                    && requestedAlbum === playerAdapter.album) {
+                    lyricsRenderer.lyricsPayload = payload;
                 }
             })
+        } else {
+            lyricsRenderer.lyricsPayload = null;
         }
     }
 }

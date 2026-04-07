@@ -8,6 +8,11 @@
             <description>Use transparent background when plasmoid is on desktop (not in panel)</description>
             <default>false</default>
         </entry>
+        <entry name="preferredPlayerIdentity" type="String">
+            <label>Preferred player identity</label>
+            <description>Exact MPRIS identity to prefer when multiple players are available.</description>
+            <default></default>
+        </entry>
         <entry name="showLyrics" type="Bool">
             <label>Show lyrics</label>
             <default>true</default>
@@ -29,6 +34,14 @@
         <entry name="lyricsFontFamily" type="String">
             <label>Lyrics Font Family</label>
             <default>Noto Sans</default>
+        </entry>
+        <entry name="enableLrclibProvider" type="Bool">
+            <label>Enable LRCLIB provider</label>
+            <default>true</default>
+        </entry>
+        <entry name="enableMprisMetadataProvider" type="Bool">
+            <label>Enable MPRIS metadata lyrics</label>
+            <default>true</default>
         </entry>
         <entry name="useCustomLyricsColor" type="Bool">
             <label>Use custom lyrics text color</label>
