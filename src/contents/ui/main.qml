@@ -5,11 +5,12 @@ import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
 import Qt5Compat.GraphicalEffects
 import org.kde.plasma.core as PlasmaCore
+import "Localizer.js" as L10n
 
 PlasmoidItem {
     id: widget
 
-    Plasmoid.status: PlasmaCore.Types.HiddenStatus
+    Plasmoid.status: playerAdapter.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.PassiveStatus
     Plasmoid.backgroundHints: plasmoid.configuration.transparentBackground
         ? PlasmaCore.Types.NoBackground
         : PlasmaCore.Types.DefaultBackground
@@ -38,7 +39,6 @@ PlasmoidItem {
         target: playerAdapter
 
         onReadyChanged: {
-            Plasmoid.status = playerAdapter.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
             if (!playerAdapter.ready) {
                 lyricsLoading = false
                 lyricsRenderer.lyricsPayload = null
@@ -224,7 +224,9 @@ PlasmoidItem {
                     font.pixelSize: plasmoid.configuration.titleFontSize
                     font.family: plasmoid.configuration.titleFontFamily
                     font.weight: Font.Bold
-                    text: playerAdapter && playerAdapter.ready ? truncateText(playerAdapter.track, plasmoid.configuration.maxTitleArtistLength) : "Lyrics"
+                    text: playerAdapter && playerAdapter.ready
+                        ? truncateText(playerAdapter.track, plasmoid.configuration.maxTitleArtistLength)
+                        : L10n.tr("Lyrics", "歌词")
 
                     Layout.preferredHeight: title.font.pixelSize + 4
                     visible: plasmoid.configuration.showTitle
@@ -241,7 +243,9 @@ PlasmoidItem {
                     color: plasmoid.configuration.useCustomArtistColor ? plasmoid.configuration.artistTextColor : Kirigami.Theme.textColor
                     font.pixelSize: plasmoid.configuration.artistFontSize
                     font.family: plasmoid.configuration.artistFontFamily
-                    text: playerAdapter && playerAdapter.ready ? truncateText(playerAdapter.artist, plasmoid.configuration.maxTitleArtistLength) : "No song playing"
+                    text: playerAdapter && playerAdapter.ready
+                        ? truncateText(playerAdapter.artist, plasmoid.configuration.maxTitleArtistLength)
+                        : L10n.tr("No song playing", "当前没有播放")
 
                     Layout.preferredHeight: artist.font.pixelSize + 4
                     visible: plasmoid.configuration.showArtist
@@ -264,40 +268,33 @@ PlasmoidItem {
 
     function buildLyricsStatusText() {
         if (!playerAdapter || !playerAdapter.ready) {
-            return "";
+            return L10n.tr("Player: not ready", "播放器：未就绪");
         }
 
         const details = [
-            "Player: " + (playerAdapter.identity || "Unknown"),
-            "Track: " + (playerAdapter.track || "Unknown")
+            L10n.tr("Player: ", "播放器：") + (playerAdapter.identity || L10n.tr("Unknown", "未知")),
+            L10n.tr("Track: ", "曲目：") + (playerAdapter.track || L10n.tr("Unknown", "未知"))
         ];
 
         if (lyricsLoading) {
-            details.push("Lyrics: looking up");
-            details.push("Enabled providers: LRCLIB, MPRIS metadata");
+            details.push(L10n.tr("Lyrics: looking up", "歌词：正在查找"));
+            details.push(L10n.tr("Enabled providers: LRCLIB, MPRIS metadata", "已启用来源：LRCLIB、MPRIS 元数据"));
             return details.join("\n");
         }
 
         if (lyricsRenderer.lyricsPayload) {
-            details.push("Lyrics source: " + formatLyricsSource(lyricsRenderer.lyricsPayload.source));
-            details.push("Lyrics mode: " + lyricsRenderer.lyricsPayload.mode);
+            details.push(L10n.tr("Lyrics source: ", "歌词来源：") + formatLyricsSource(lyricsRenderer.lyricsPayload.source));
+            details.push(L10n.tr("Lyrics mode: ", "歌词模式：") + L10n.lyricsMode(lyricsRenderer.lyricsPayload.mode));
         } else {
-            details.push("Lyrics: unavailable");
-            details.push("Enabled providers: LRCLIB, MPRIS metadata");
+            details.push(L10n.tr("Lyrics: unavailable", "歌词：不可用"));
+            details.push(L10n.tr("Enabled providers: LRCLIB, MPRIS metadata", "已启用来源：LRCLIB、MPRIS 元数据"));
         }
 
         return details.join("\n");
     }
 
     function formatLyricsSource(source) {
-        switch (source) {
-            case "lrclib":
-                return "LRCLIB";
-            case "mpris-metadata":
-                return "MPRIS metadata";
-            default:
-                return source || "unknown";
-        }
+        return L10n.providerName(source);
     }
 
     /* Artwork update handler */

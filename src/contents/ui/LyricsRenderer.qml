@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import Qt5Compat.GraphicalEffects
+import "Localizer.js" as L10n
 
 Text {
     id: textElement
@@ -15,7 +16,7 @@ Text {
     Layout.alignment: (centeredLyrics || showStatusState) ? Qt.AlignHCenter | Qt.AlignVCenter : Qt.AlignLeft
     textFormat: Text.RichText
 
-    text: "Lyrics"
+    text: L10n.tr("Lyrics", "歌词")
     color: plasmoid.configuration.useCustomLyricsColor ? plasmoid.configuration.lyricsTextColor : Kirigami.Theme.textColor
     font.pixelSize: plasmoid.configuration.lyricsFontSize
     font.family: plasmoid.configuration.lyricsFontFamily
@@ -97,8 +98,8 @@ Text {
 
         if (showStatusState) {
             builder = loading
-                ? `<span style="color:${unhighlightedColor}">Looking up lyrics...</span>`
-                : `<span style="color:${unhighlightedColor}">No lyrics available</span>`;
+                ? `<span style="color:${unhighlightedColor}">${L10n.tr("Looking up lyrics...", "正在查找歌词...")}</span>`
+                : `<span style="color:${unhighlightedColor}">${L10n.tr("No lyrics available", "没有可用歌词")}</span>`;
             lines = 1;
             renderedLineIndex = -1;
             renderedHighlighted = false;
@@ -225,14 +226,7 @@ Text {
     }
 
     function formatSourceName(source) {
-        switch (source) {
-            case "lrclib":
-                return "LRCLIB";
-            case "mpris-metadata":
-                return "MPRIS metadata";
-            default:
-                return source ? source : "";
-        }
+        return L10n.providerName(source);
     }
 
 }

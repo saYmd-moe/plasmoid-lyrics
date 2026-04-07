@@ -5,6 +5,7 @@ import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.private.mpris as Mpris
+import "Localizer.js" as L10n
 
 KCM.SimpleKCM {
     property bool cfg_showLyricsDefault
@@ -77,7 +78,7 @@ KCM.SimpleKCM {
         spacing: Kirigami.Units.smallSpacing
 
         Kirigami.Heading {
-            text: "Appearance"
+            text: L10n.tr("Appearance", "外观")
             level: 3
             Layout.alignment: Qt.AlignLeft
             Layout.topMargin: Kirigami.Units.largeSpacing
@@ -85,8 +86,8 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: transparentBackground
-            text: "Transparent background"
-            ToolTip.text: "Use transparent background when plasmoid is on desktop (not in panel)"
+            text: L10n.tr("Transparent background", "透明背景")
+            ToolTip.text: L10n.tr("Use transparent background when plasmoid is on desktop (not in panel)", "当部件放在桌面上而不是面板中时使用透明背景")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
         }
@@ -99,14 +100,14 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Heading {
-            text: "Lyrics"
+            text: L10n.tr("Lyrics", "歌词")
             level: 3
             Layout.alignment: Qt.AlignLeft
         }
 
         CheckBox {
             id: showLyrics
-            text: "Show lyrics"
+            text: L10n.tr("Show lyrics", "显示歌词")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
         }
@@ -116,13 +117,13 @@ KCM.SimpleKCM {
             Layout.leftMargin: 20
             Layout.maximumWidth: 520
             wrapMode: Text.WordWrap
-            text: "Synced lyrics are preferred from LRCLIB. If that fails, the plasmoid can fall back to plain lyrics exposed by the active MPRIS player."
+            text: L10n.tr("Synced lyrics are preferred from LRCLIB. If that fails, the plasmoid can fall back to plain lyrics exposed by the active MPRIS player.", "优先使用 LRCLIB 的同步歌词。如果失败，则回退到当前 MPRIS 播放器提供的纯文本歌词。")
             opacity: 0.75
         }
 
         CheckBox {
             id: highlightCurrentLine
-            text: "Highlight current line"
+            text: L10n.tr("Highlight current line", "高亮当前行")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showLyrics.checked
@@ -130,8 +131,8 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: alternativeLineHeightCalculation
-            text: "Use alternative scroll offset calculation (Works better with some fonts)"
-            ToolTip.text: "Use an alternative method to calculate line height which may work better with some fonts."
+            text: L10n.tr("Use alternative scroll offset calculation (Works better with some fonts)", "使用替代滚动偏移计算方式（某些字体效果更好）")
+            ToolTip.text: L10n.tr("Use an alternative method to calculate line height which may work better with some fonts.", "使用另一种行高计算方法，某些字体下效果更好。")
             Layout.alignment: Qt.AlignLeft
             enabled: showLyrics.checked
             Layout.leftMargin: 20
@@ -144,7 +145,7 @@ KCM.SimpleKCM {
             enabled: showLyrics.checked
 
             Label {
-                text: "Lyrics Font:"
+                text: L10n.tr("Lyrics Font:", "歌词字体：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -171,7 +172,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: enableLrclibProvider
-            text: "Enable LRCLIB provider"
+            text: L10n.tr("Enable LRCLIB provider", "启用 LRCLIB 来源")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showLyrics.checked
@@ -179,7 +180,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: enableMprisMetadataProvider
-            text: "Enable MPRIS metadata lyrics fallback"
+            text: L10n.tr("Enable MPRIS metadata lyrics fallback", "启用 MPRIS 元数据歌词回退")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showLyrics.checked
@@ -190,14 +191,14 @@ KCM.SimpleKCM {
             Layout.leftMargin: 40
             Layout.maximumWidth: 520
             wrapMode: Text.WordWrap
-            text: "Keep both providers enabled for the most robust experience. LRCLIB gives synced lines when available, while MPRIS metadata can still show plain text lyrics."
+            text: L10n.tr("Keep both providers enabled for the most robust experience. LRCLIB gives synced lines when available, while MPRIS metadata can still show plain text lyrics.", "建议同时启用两个来源以获得最稳妥的体验。LRCLIB 提供同步歌词，MPRIS 元数据则可在失败时显示纯文本歌词。")
             opacity: 0.7
             visible: showLyrics.checked
         }
 
         CheckBox {
             id: useCustomLyricsColor
-            text: "Use custom lyrics text color"
+            text: L10n.tr("Use custom lyrics text color", "使用自定义歌词颜色")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showLyrics.checked
@@ -210,7 +211,7 @@ KCM.SimpleKCM {
             enabled: showLyrics.checked && useCustomLyricsColor.checked
 
             Label {
-                text: "Lyrics Color:"
+                text: L10n.tr("Lyrics Color:", "歌词颜色：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -238,7 +239,7 @@ KCM.SimpleKCM {
 
         ColorDialog {
             id: lyricsColorDialog
-            title: "Choose lyrics text color"
+            title: L10n.tr("Choose lyrics text color", "选择歌词颜色")
             selectedColor: cfg_lyricsTextColor
             onAccepted: {
                 cfg_lyricsTextColor = selectedColor.toString()
@@ -253,7 +254,7 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Heading {
-            text: "Player"
+            text: L10n.tr("Player", "播放器")
             level: 3
             Layout.alignment: Qt.AlignLeft
         }
@@ -264,14 +265,14 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing
 
             Label {
-                text: "Preferred player identity:"
+                text: L10n.tr("Preferred player identity:", "首选播放器标识：")
                 Layout.alignment: Qt.AlignLeft
             }
 
             TextField {
                 id: preferredPlayerIdentity
                 Layout.fillWidth: true
-                placeholderText: "Spotify"
+                placeholderText: L10n.tr("Spotify", "Spotify")
 
                 Component.onCompleted: {
                     text = plasmoid.configuration.preferredPlayerIdentity || ""
@@ -279,7 +280,7 @@ KCM.SimpleKCM {
             }
 
             Button {
-                text: "Clear"
+                text: L10n.tr("Clear", "清除")
                 enabled: preferredPlayerIdentity.text.length > 0
                 onClicked: preferredPlayerIdentity.text = ""
             }
@@ -290,7 +291,7 @@ KCM.SimpleKCM {
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.maximumWidth: 520
             wrapMode: Text.WordWrap
-            text: "Leave this empty to use the first available player. If more than one player is running, pick one of the detected identities below."
+            text: L10n.tr("Leave this empty to use the first available player. If more than one player is running, pick one of the detected identities below.", "留空时将使用第一个可用播放器。如果同时运行多个播放器，可以从下方检测到的标识中选择。")
             opacity: 0.75
         }
 
@@ -317,13 +318,13 @@ KCM.SimpleKCM {
         Label {
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
-            text: "No running MPRIS players detected right now."
+            text: L10n.tr("No running MPRIS players detected right now.", "当前未检测到正在运行的 MPRIS 播放器。")
             opacity: 0.65
             visible: detectedPlayers.length === 0
         }
 
         Kirigami.Heading {
-            text: "Track Information"
+            text: L10n.tr("Track Information", "曲目信息")
             level: 3
             Layout.alignment: Qt.AlignLeft
             Layout.topMargin: Kirigami.Units.largeSpacing
@@ -331,7 +332,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: showAlbumCover
-            text: "Show album cover"
+            text: L10n.tr("Show album cover", "显示专辑封面")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
         }
@@ -343,8 +344,8 @@ KCM.SimpleKCM {
 
             CheckBox {
                 id: fetchAlbumCoverHttps
-                text: "Fetch album cover over HTTPS (Causes issues)"
-                ToolTip.text: "Use HTTPS to fetch album covers. This could cause issues with the current KDE Plasma version."
+                text: L10n.tr("Fetch album cover over HTTPS (Causes issues)", "通过 HTTPS 获取专辑封面（可能有问题）")
+                ToolTip.text: L10n.tr("Use HTTPS to fetch album covers. This could cause issues with the current KDE Plasma version.", "使用 HTTPS 获取专辑封面。当前 KDE Plasma 版本下这可能引发问题。")
                 Layout.alignment: Qt.AlignLeft
                 enabled: showAlbumCover.checked
                 Layout.leftMargin: 20
@@ -357,7 +358,7 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing
 
             Label {
-                text: "Max title/artist length:"
+                text: L10n.tr("Max title/artist length:", "标题/艺术家最大长度：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -373,7 +374,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: showTitle
-            text: "Show title"
+            text: L10n.tr("Show title", "显示标题")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
             checked: plasmoid.configuration.showTitle
@@ -386,7 +387,7 @@ KCM.SimpleKCM {
             Layout.leftMargin: Kirigami.Units.largeSpacing
 
             Label {
-                text: "Title Font:"
+                text: L10n.tr("Title Font:", "标题字体：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -413,7 +414,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: useCustomTitleColor
-            text: "Use custom title text color"
+            text: L10n.tr("Use custom title text color", "使用自定义标题颜色")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showTitle.checked
@@ -426,7 +427,7 @@ KCM.SimpleKCM {
             enabled: showTitle.checked && useCustomTitleColor.checked
 
             Label {
-                text: "Title Color:"
+                text: L10n.tr("Title Color:", "标题颜色：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -454,7 +455,7 @@ KCM.SimpleKCM {
 
         ColorDialog {
             id: titleColorDialog
-            title: "Choose title text color"
+            title: L10n.tr("Choose title text color", "选择标题颜色")
             selectedColor: cfg_titleTextColor
             onAccepted: {
                 cfg_titleTextColor = selectedColor.toString()
@@ -463,7 +464,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: showArtist
-            text: "Show artist"
+            text: L10n.tr("Show artist", "显示艺术家")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: Kirigami.Units.largeSpacing
             checked: plasmoid.configuration.showArtist
@@ -476,7 +477,7 @@ KCM.SimpleKCM {
             Layout.leftMargin: Kirigami.Units.largeSpacing
 
             Label {
-                text: "Artist Font:"
+                text: L10n.tr("Artist Font:", "艺术家字体：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -503,7 +504,7 @@ KCM.SimpleKCM {
 
         CheckBox {
             id: useCustomArtistColor
-            text: "Use custom artist text color"
+            text: L10n.tr("Use custom artist text color", "使用自定义艺术家颜色")
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 20
             enabled: showArtist.checked
@@ -516,7 +517,7 @@ KCM.SimpleKCM {
             enabled: showArtist.checked && useCustomArtistColor.checked
 
             Label {
-                text: "Artist Color:"
+                text: L10n.tr("Artist Color:", "艺术家颜色：")
                 Layout.alignment: Qt.AlignLeft
             }
 
@@ -544,7 +545,7 @@ KCM.SimpleKCM {
 
         ColorDialog {
             id: artistColorDialog
-            title: "Choose artist text color"
+            title: L10n.tr("Choose artist text color", "选择艺术家颜色")
             selectedColor: cfg_artistTextColor
             onAccepted: {
                 cfg_artistTextColor = selectedColor.toString()
