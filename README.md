@@ -3,6 +3,11 @@
 A KDE Plasma widget that displays the current song playing from an MPRIS-compatible player together with synchronized lyrics in real time.<br>
 This plasmoid is designed to stay lightweight while fitting naturally into a Plasma panel.
 
+## Fork Note
+
+This project started as a fork of [LabyStudio/plasmoid-spotify](https://github.com/LabyStudio/plasmoid-spotify).
+Thanks to LabyStudio for building and publishing the original plasmoid that this generalization work builds on.
+
 ![Plasma Lyrics Preview](.github/assets/preview.gif)
 
 ## Features
