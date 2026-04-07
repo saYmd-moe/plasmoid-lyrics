@@ -11,8 +11,8 @@ Text {
     Layout.rightMargin: 15
     Layout.leftMargin: 15
     wrapMode: Text.NoWrap
-    horizontalAlignment: centeredLyrics ? Text.AlignHCenter : Text.AlignRight
-    Layout.alignment: centeredLyrics ? Qt.AlignHCenter | Qt.AlignVCenter : Qt.AlignLeft
+    horizontalAlignment: (centeredLyrics || showStatusState) ? Text.AlignHCenter : Text.AlignRight
+    Layout.alignment: (centeredLyrics || showStatusState) ? Qt.AlignHCenter | Qt.AlignVCenter : Qt.AlignLeft
     textFormat: Text.RichText
 
     text: "Lyrics"
@@ -24,12 +24,14 @@ Text {
 
     property var lyricsPayload: null
     property var playerAdapter: null
+    property bool loading: false
     property var transitionDuration: 1000
     property var lineCount: 0
     property var renderedLineIndex: -1
     property var renderedHighlighted: false
     property bool centeredLyrics: false
     readonly property bool hasLyrics: currentLyrics.length > 0
+    readonly property bool showStatusState: loading || !hasLyrics
     readonly property var currentLyrics: lyricsPayload && lyricsPayload.lines ? lyricsPayload.lines : []
     readonly property string lyricsMode: lyricsPayload && lyricsPayload.mode ? lyricsPayload.mode : "synced"
 
@@ -53,6 +55,11 @@ Text {
         function onUseCustomLyricsColorChanged() { updateText() }
         function onLyricsTextColorChanged() { updateText() }
         function onHighlightCurrentLineChanged() { updateText() }
+    }
+
+    onLoadingChanged: {
+        updateText()
+        updateTargetPosition(false)
     }
 
     onLyricsPayloadChanged: {
@@ -88,7 +95,30 @@ Text {
             ? darkenColor(plasmoid.configuration.lyricsTextColor, 0.45)
             : "gray";
 
-        if (hasLyrics) {
+        if (showStatusState) {
+            builder = loading
+                ? `<span style="color:${unhighlightedColor}">Looking up lyrics...</span>`
+                : `<span style="color:${unhighlightedColor}">No lyrics available</span>`;
+            lines = 1;
+            renderedLineIndex = -1;
+            renderedHighlighted = false;
+        } else if (lyricsMode === "plain") {
+            const sourceName = formatSourceName(lyricsPayload ? lyricsPayload.source : "");
+            if (sourceName) {
+                builder += `<span style="color:${unhighlightedColor}">${sourceName}</span><br/>`;
+                lines++;
+            }
+
+            currentLyrics.forEach((line, i) => {
+                builder += line.text;
+                if (i < currentLyrics.length - 1) {
+                    builder += "<br/>";
+                }
+                lines++;
+            });
+            renderedLineIndex = -1;
+            renderedHighlighted = false;
+        } else if (hasLyrics) {
             currentLyrics.forEach((line, i) => {
                 if (i === currentLineIndex || !canHighlight) {
                     builder += line.text;
@@ -105,8 +135,10 @@ Text {
 
         lineCount = lines;
         textElement.text = builder;
-        renderedLineIndex = currentLineIndex;
-        renderedHighlighted = canHighlight;
+        if (!showStatusState && lyricsMode === "synced") {
+            renderedLineIndex = currentLineIndex;
+            renderedHighlighted = canHighlight;
+        }
     }
 
     function updateTargetPosition(animated = true) {
@@ -132,7 +164,7 @@ Text {
 
     function canUpdateText() {
         let highlight = plasmoid.configuration.highlightCurrentLine;
-        if (lyricsMode !== "synced") {
+        if (showStatusState || lyricsMode !== "synced") {
             return renderedHighlighted !== false;
         }
         if (renderedHighlighted !== highlight) {
@@ -148,7 +180,7 @@ Text {
     }
 
     function getCurrentLineIndex(offset = 0) {
-        if (lyricsMode !== "synced" || !hasLyrics || !playerAdapter) {
+        if (showStatusState || lyricsMode !== "synced" || !hasLyrics || !playerAdapter) {
             return -1;
         }
 
@@ -165,7 +197,7 @@ Text {
     }
 
     function calculateTargetY() {
-        if (lyricsMode !== "synced") {
+        if (showStatusState || lyricsMode !== "synced") {
             return textElement.parent.height / 2 - textElement.lineHeight / 2;
         }
 
@@ -190,6 +222,17 @@ Text {
 
         let targetLineIndex = currentLineIndex - targetLineInView;
         return -targetLineIndex * lineHeight;
+    }
+
+    function formatSourceName(source) {
+        switch (source) {
+            case "lrclib":
+                return "LRCLIB";
+            case "mpris-metadata":
+                return "MPRIS metadata";
+            default:
+                return source ? source : "";
+        }
     }
 
 }

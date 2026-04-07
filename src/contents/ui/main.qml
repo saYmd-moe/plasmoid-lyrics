@@ -19,6 +19,7 @@ PlasmoidItem {
 
     readonly property int volumeStep: 2
     property int lyricsRequestToken: 0
+    property bool lyricsLoading: false
     readonly property string lyricsStatusText: buildLyricsStatusText()
 
 
@@ -39,6 +40,7 @@ PlasmoidItem {
         onReadyChanged: {
             Plasmoid.status = playerAdapter.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
             if (!playerAdapter.ready) {
+                lyricsLoading = false
                 lyricsRenderer.lyricsPayload = null
             } else {
                 updateArtwork()
@@ -112,7 +114,8 @@ PlasmoidItem {
             id: lyricsRenderer
             lyricsPayload: null
             playerAdapter: playerAdapter
-            visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready && hasLyrics
+            loading: lyricsLoading
+            visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready
             Layout.fillWidth: true
             centeredLyrics: !plasmoid.configuration.showAlbumCover
                 && !plasmoid.configuration.showTitle
@@ -269,11 +272,18 @@ PlasmoidItem {
             "Track: " + (playerAdapter.track || "Unknown")
         ];
 
+        if (lyricsLoading) {
+            details.push("Lyrics: looking up");
+            details.push("Enabled providers: LRCLIB, MPRIS metadata");
+            return details.join("\n");
+        }
+
         if (lyricsRenderer.lyricsPayload) {
             details.push("Lyrics source: " + formatLyricsSource(lyricsRenderer.lyricsPayload.source));
             details.push("Lyrics mode: " + lyricsRenderer.lyricsPayload.mode);
         } else {
-            details.push("Lyrics source: none");
+            details.push("Lyrics: unavailable");
+            details.push("Enabled providers: LRCLIB, MPRIS metadata");
         }
 
         return details.join("\n");
@@ -310,6 +320,7 @@ PlasmoidItem {
             const requestedArtist = playerAdapter.artist;
             const requestedAlbum = playerAdapter.album;
 
+            lyricsLoading = true;
             lyricsRenderer.lyricsPayload = null;
 
             lyricsLrcLib.fetchLyricsPayload(requestedTrack, requestedArtist, requestedAlbum, playerAdapter.metadata)
@@ -320,10 +331,18 @@ PlasmoidItem {
                     && requestedTrack === playerAdapter.track
                     && requestedArtist === playerAdapter.artist
                     && requestedAlbum === playerAdapter.album) {
+                    lyricsLoading = false;
                     lyricsRenderer.lyricsPayload = payload;
                 }
             })
+                .catch(error => {
+                    if (widget && requestToken === lyricsRequestToken) {
+                        lyricsLoading = false;
+                    }
+                    console.warn("Lyrics request failed:", error);
+                })
         } else {
+            lyricsLoading = false;
             lyricsRenderer.lyricsPayload = null;
         }
     }
