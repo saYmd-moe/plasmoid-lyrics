@@ -26,6 +26,7 @@ Text {
     property var lyricsPayload: null
     property var playerAdapter: null
     property bool loading: false
+    property bool instrumentalHint: false
     property var transitionDuration: 1000
     property var lineCount: 0
     property var renderedLineIndex: -1
@@ -99,8 +100,10 @@ Text {
         if (showStatusState) {
             builder = loading
                 ? `<span style="color:${unhighlightedColor}">${L10n.tr("Looking up lyrics...", "正在查找歌词...")}</span>`
-                : `<span style="color:${unhighlightedColor}">${L10n.tr("No lyrics available", "没有可用歌词")}</span>`;
-            lines = 1;
+                : instrumentalHint
+                    ? `<span style="color:${unhighlightedColor}">${L10n.tr("Instrumental track", "纯音乐 / 器乐曲")}</span><br/><span style="color:${unhighlightedColor}">${L10n.tr("Let the music speak for itself.", "这首曲子可能本来就没有歌词。")}</span>`
+                    : `<span style="color:${unhighlightedColor}">${L10n.tr("No lyrics available", "没有可用歌词")}</span>`;
+            lines = instrumentalHint && !loading ? 2 : 1;
             renderedLineIndex = -1;
             renderedHighlighted = false;
         } else if (lyricsMode === "plain") {

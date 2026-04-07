@@ -44,6 +44,8 @@ QtObject {
     readonly property string artworkUrl: ready ? player.artUrl : null
 
     readonly property bool canRaise: ready ? player.canRaise : false
+    readonly property bool canGoNext: ready ? player.canGoNext : false
+    readonly property bool canGoPrevious: ready ? player.canGoPrevious : false
 
     property var timeLastPositionChanged: new Date().getTime()
 
@@ -134,6 +136,18 @@ QtObject {
     function togglePlayback() {
         if (ready) {
             player.PlayPause()
+        }
+    }
+
+    function nextTrack() {
+        if (ready && canGoNext) {
+            player.Next()
+        }
+    }
+
+    function previousTrack() {
+        if (ready && canGoPrevious) {
+            player.Previous()
         }
     }
 

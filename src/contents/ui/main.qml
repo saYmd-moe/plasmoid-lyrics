@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
@@ -21,7 +20,11 @@ PlasmoidItem {
     readonly property int volumeStep: 2
     property int lyricsRequestToken: 0
     property bool lyricsLoading: false
+    property bool instrumentalHint: false
+    property int tapCount: 0
     readonly property string lyricsStatusText: buildLyricsStatusText()
+    readonly property string tooltipMainText: buildTooltipMainText()
+    readonly property string tooltipSubText: buildTooltipSubText()
 
 
     /* Lyrics LRC library */
@@ -72,31 +75,49 @@ PlasmoidItem {
         }
     }
 
-    /* Mouse click handling */
+    Timer {
+        id: tapSequenceTimer
+        interval: 280
+        repeat: false
+        onTriggered: {
+            handleTapSequence(tapCount)
+            tapCount = 0
+        }
+    }
+
+    /* Hover handling */
+    MouseArea {
+        z: 99
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        cursorShape: playerAdapter && playerAdapter.canRaise ? Qt.PointingHandCursor : Qt.ArrowCursor
+        hoverEnabled: true
+    }
+
+    PlasmaCore.ToolTipArea {
+        anchors.fill: parent
+        active: tooltipMainText.length > 0
+        mainText: tooltipMainText
+        subText: tooltipSubText
+    }
+
     MouseArea {
         z: 100
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        cursorShape: playerAdapter && playerAdapter.canRaise ? Qt.PointingHandCursor : Qt.ArrowCursor
-        hoverEnabled: true
-        ToolTip.visible: containsMouse && lyricsStatusText.length > 0
-        ToolTip.text: lyricsStatusText
+        hoverEnabled: false
 
         onClicked: (mouse) => {
-            switch (mouse.button) {
-                case Qt.MiddleButton:
-                    playerAdapter.togglePlayback()
-                    break
-                case Qt.LeftButton:
-                    if (playerAdapter.canRaise) {
-                        playerAdapter.raise()
-                    }
-                    break
+            if (mouse.button === Qt.LeftButton || mouse.button === Qt.MiddleButton) {
+                tapCount = Math.min(3, tapCount + 1)
+                tapSequenceTimer.restart()
             }
         }
+    }
 
-        onWheel: (wheel) => {
-            if (wheel.angleDelta.y > 0) {
+    WheelHandler {
+        onWheel: (eventPoint, event) => {
+            if (event.angleDelta.y > 0) {
                 playerAdapter.changeVolume(volumeStep / 100, true)
             } else {
                 playerAdapter.changeVolume(-volumeStep / 100, true)
@@ -115,6 +136,7 @@ PlasmoidItem {
             lyricsPayload: null
             playerAdapter: playerAdapter
             loading: lyricsLoading
+            instrumentalHint: instrumentalHint
             visible: plasmoid.configuration.showLyrics && playerAdapter && playerAdapter.ready
             Layout.fillWidth: true
             centeredLyrics: !plasmoid.configuration.showAlbumCover
@@ -225,7 +247,7 @@ PlasmoidItem {
                     font.family: plasmoid.configuration.titleFontFamily
                     font.weight: Font.Bold
                     text: playerAdapter && playerAdapter.ready
-                        ? truncateText(playerAdapter.track, plasmoid.configuration.maxTitleArtistLength)
+                        ? truncateTrackText(playerAdapter.track, plasmoid.configuration.maxTitleArtistLength)
                         : L10n.tr("Lyrics", "歌词")
 
                     Layout.preferredHeight: title.font.pixelSize + 4
@@ -266,6 +288,50 @@ PlasmoidItem {
             : text;
     }
 
+    function truncateTrackText(text, maxLen) {
+        if (!text || text.length <= maxLen) {
+            return text;
+        }
+
+        const separators = [" - ", " – ", " — ", ": ", " (", " [", " / "];
+        for (let i = 0; i < separators.length; i++) {
+            const index = text.indexOf(separators[i]);
+            if (index > 12 && index <= maxLen) {
+                return text.slice(0, index) + "...";
+            }
+        }
+
+        return truncateText(text, maxLen);
+    }
+
+    function isInstrumentalTrack(track, artist, album, metadata) {
+        const fields = [
+            track || "",
+            artist || "",
+            album || "",
+            metadata && metadata["xesam:title"] ? metadata["xesam:title"] : "",
+            metadata && metadata["xesam:comment"] ? metadata["xesam:comment"] : ""
+        ].join(" ").toLowerCase();
+
+        const hints = [
+            "instrumental",
+            "inst.",
+            "karaoke",
+            "伴奏",
+            "纯音乐",
+            "演奏曲",
+            "音乐版"
+        ];
+
+        for (let i = 0; i < hints.length; i++) {
+            if (fields.indexOf(hints[i]) >= 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     function buildLyricsStatusText() {
         if (!playerAdapter || !playerAdapter.ready) {
             return L10n.tr("Player: not ready", "播放器：未就绪");
@@ -273,7 +339,8 @@ PlasmoidItem {
 
         const details = [
             L10n.tr("Player: ", "播放器：") + (playerAdapter.identity || L10n.tr("Unknown", "未知")),
-            L10n.tr("Track: ", "曲目：") + (playerAdapter.track || L10n.tr("Unknown", "未知"))
+            L10n.tr("Track: ", "曲目：") + (playerAdapter.track || L10n.tr("Unknown", "未知")),
+            L10n.tr("Artist: ", "艺术家：") + (playerAdapter.artist || L10n.tr("Unknown", "未知"))
         ];
 
         if (lyricsLoading) {
@@ -291,6 +358,44 @@ PlasmoidItem {
         }
 
         return details.join("\n");
+    }
+
+    function buildTooltipMainText() {
+        if (!playerAdapter || !playerAdapter.ready) {
+            return L10n.tr("Plasma Lyrics", "Plasma 歌词");
+        }
+
+        if (playerAdapter.track && playerAdapter.artist) {
+            return playerAdapter.track + "\n" + playerAdapter.artist;
+        }
+
+        return playerAdapter.track || playerAdapter.artist || L10n.tr("Plasma Lyrics", "Plasma 歌词");
+    }
+
+    function buildTooltipSubText() {
+        if (!playerAdapter || !playerAdapter.ready) {
+            return L10n.tr("Waiting for a compatible player.", "等待兼容的播放器。");
+        }
+
+        return buildLyricsStatusText();
+    }
+
+    function handleTapSequence(count) {
+        if (!playerAdapter || !playerAdapter.ready || count <= 0) {
+            return;
+        }
+
+        switch (count) {
+            case 1:
+                playerAdapter.togglePlayback()
+                break
+            case 2:
+                playerAdapter.nextTrack()
+                break
+            default:
+                playerAdapter.previousTrack()
+                break
+        }
     }
 
     function formatLyricsSource(source) {
@@ -316,11 +421,13 @@ PlasmoidItem {
             const requestedTrack = playerAdapter.track;
             const requestedArtist = playerAdapter.artist;
             const requestedAlbum = playerAdapter.album;
+            const requestedMetadata = playerAdapter.metadata;
 
             lyricsLoading = true;
+            instrumentalHint = isInstrumentalTrack(requestedTrack, requestedArtist, requestedAlbum, requestedMetadata);
             lyricsRenderer.lyricsPayload = null;
 
-            lyricsLrcLib.fetchLyricsPayload(requestedTrack, requestedArtist, requestedAlbum, playerAdapter.metadata)
+            lyricsLrcLib.fetchLyricsPayload(requestedTrack, requestedArtist, requestedAlbum, requestedMetadata)
                 .then(payload => {
                 if (widget
                     && requestToken === lyricsRequestToken
@@ -340,6 +447,7 @@ PlasmoidItem {
                 })
         } else {
             lyricsLoading = false;
+            instrumentalHint = false;
             lyricsRenderer.lyricsPayload = null;
         }
     }
